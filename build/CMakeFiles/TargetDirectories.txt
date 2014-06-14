@@ -1,0 +1,1 @@
+/home/Soft/Converters/apng2mng/build/CMakeFiles/apng2mng.dir
