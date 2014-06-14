@@ -19,3 +19,8 @@
 *.exe
 *.out
 *.app
+
+# We're using CMake, so let's hide Makefiles
+Makefile
+
+
