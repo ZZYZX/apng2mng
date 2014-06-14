@@ -19,7 +19,7 @@ INCLUDE_DIRECTORIES(
   ${PROJECT_SOURCE_DIR}/./lib/src
   ${PROJECT_BINARY_DIR}/./lib/src
 )
-TARGET_LINK_LIBRARIES(apng2mng apngasm)
+TARGET_LINK_LIBRARIES(apng2mng apngasm libmng)
 
 ADD_TEST(
 	NAME apng2mng
