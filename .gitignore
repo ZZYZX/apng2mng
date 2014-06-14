@@ -1,4 +1,5 @@
-# We're using CMake, so all we need 
-# to do is hide the build directory
-build
-
+apng2mng
+*.[aod]
+*.png
+*.mng
+*.apng

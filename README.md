@@ -1,7 +1,7 @@
 apng2mng
 ========
 
-Convert APNG animations into MNG format
+Tool to convert between APNG and MNG image file formats
 
 _________________________________________
 

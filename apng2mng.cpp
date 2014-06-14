@@ -1,7 +1,7 @@
-#include <apngasm.h>
+#include <apngasm.h> // will just <apngframe.h> be enough?
+#include <libmng.h>
 #include <iostream>
 #include <cstdlib>
-#include <mng.h>
 
 int main(int argc, char* argv[])
 {
@@ -42,11 +42,11 @@ int main(int argc, char* argv[])
   std::cout << "Converting APNG file penguins.apng to penguins.mng..." << std::endl;
   std::vector<apngasm::APNGFrame> frames = assembler.disassemble("penguins.apng");
   std::cout << frames.size() << " Frames" << std::endl;
-  assembler.savePNGs("./"); // "out"
+  assembler.savePNGs("."); // "out"
 #ifdef APNG_SPECS_SUPPORTED
   // XXX add the -s flag to the cli for the spec. files to be saved
-  assembler.saveJSON("penguins.json", "./"); // "out"
-  assembler.saveXML("penguins.xml", "./"); // "out"
+  assembler.saveJSON("penguins.json", "."); // "out"
+  assembler.saveXML("penguins.xml", "."); // "out"
 #endif
   std::cout << "Done!" << std::endl;
 #endif
