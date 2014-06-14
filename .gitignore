@@ -1,4 +1,4 @@
 # We're using CMake, so all we need 
 # to do is hide the build directory
-./build
+build
 

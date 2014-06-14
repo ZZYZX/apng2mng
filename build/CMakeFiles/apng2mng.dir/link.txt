@@ -1,1 +1,0 @@
-/usr/bin/c++       CMakeFiles/apng2mng.dir/apng2mng.cpp.o  -o apng2mng -rdynamic -lapngasm -lz 
