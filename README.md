@@ -29,7 +29,9 @@ Installation
 Requires `cmake` to build.
 
 > mkdir build && cd build
+
 > cmake ..
+
 > make
 
 If all went well, you should have apng2mng binary in the ./build/out folder.
@@ -38,6 +40,7 @@ Usage
 -----
 
 > apng2mng penguins.apng penguins.mng
+
 > apng2mng penguins.mng penguins_again.apng
 
 Notes
