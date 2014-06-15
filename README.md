@@ -5,8 +5,8 @@ Tool to convert between APNG and MNG image file formats
 
 _________________________________________
 
-This is WIP, the tools are not ready yet.
-=========================================
+This is WIP, the tool is not ready yet.
+=======================================
 Pull requests appreciated!
 ==========================
 
@@ -28,17 +28,17 @@ Installation
 
 Requires `cmake` to build.
 
-# mkdir build && cd build
-# cmake ..
-# make
+> mkdir build && cd build
+> cmake ..
+> make
 
 If all went well, you should have apng2mng binary in the ./build/out folder.
 
 Usage
 -----
 
-# apng2mng penguins.apng penguins.mng
-# apng2mng penguins.mng penguins_again.apng
+> apng2mng penguins.apng penguins.mng
+> apng2mng penguins.mng penguins_again.apng
 
 Notes
 -----

@@ -61,7 +61,6 @@ int main(int argc, char* argv[])
   char buf[255], destfname[255];
   FILE *fdest, *fsource;
 
-    std::cout << argc << std::endl;
   if( argc < 2 ) { // no arguments provided
     std::cout << "Error: not enough arguments\n\nUsage: apng2mng image.apng [image.mng]\n\n" << std::endl;
     exit(EXIT_FAILURE);
@@ -82,8 +81,9 @@ int main(int argc, char* argv[])
       std::string _destfname = argv[1];
       _destfname = basename(_destfname);
       _destfname = removeExtension(_destfname);
-      //.removeExtension() << ".mng"
-      strcpy(destfname, "_destfname.c_str()");
+      // << ".mng"
+      strcpy(destfname, _destfname.c_str());
+      std::cout << _destfname << std::endl;
     }
 
     std::cout << "Performing APNG-to-MNG conversion of argv[1] to destfname\n" << std::endl;
@@ -92,8 +92,9 @@ int main(int argc, char* argv[])
       std::string _destfname = argv[1];
       _destfname = basename(_destfname);
       _destfname = removeExtension(_destfname);
-      //.removeExtension() << ".apng"
-      strcpy(destfname, "_destfname.c_str()");
+      // << ".apng"
+      strcpy(destfname, _destfname.c_str());
+      std::cout << _destfname << std::endl;
     }
 
     std::cout << "Performing MNG-to-APNG conversion of argv[1] to destfname\n" << std::endl;
@@ -102,7 +103,7 @@ int main(int argc, char* argv[])
     exit(EXIT_FAILURE);
   }
 
-  fdest = fopen(destfname, "wb");
+  // fdest = fopen(destfname, "wb"); // XXX creates empty files with trashy names
 
 #ifdef APNG_READ_SUPPORTED
   // assembler.reset();
@@ -177,8 +178,8 @@ int main(int argc, char* argv[])
 */
 
 
-  fclose(fdest);
   fclose(fsource);
+  // fclose(fdest);
 
   exit(EXIT_SUCCESS);
 }
