@@ -1,12 +1,28 @@
 #include <apngasm.h> // will just <apngframe.h> be enough?
-#include <libmng.h>
 #include <iostream>
 #include <cstdlib>
+#include "mng.h"
+
+std::string basename(std::string filename)
+{
+  std::size_t pos = filename.find_last_of("/\\:");
+  pos = (pos!=std::string::npos) ? pos+1 : 0;
+  return filename.substr(pos, filename.length() - pos - (filename.find_last_of("\"") != std::string::npos));
+}
+
+std::string removeExtension(std::string filename) {
+  size_t lastdot = filename.find_last_of(".");
+
+  if (lastdot == std::string::npos)
+    return filename;
+
+  return filename.substr(0, lastdot); 
+}
 
 int main(int argc, char* argv[])
 {
   apngasm::APNGAsm assembler;
-  std::cout << "Initializing assembler " << assembler.version() << std::endl;
+  std::cout << "Initializing apngasm " << assembler.version() << std::endl;
 
 /*
 #ifdef APNG_WRITE_SUPPORTED
@@ -33,20 +49,68 @@ int main(int argc, char* argv[])
 #endif
 */
 
+  // APNG/PNG 8-Byte header
+  static const char png_signature[8] = { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A };
+  //      MNG 8-Byte header
+  static const char mng_signature[8] = { 0x8A, 0x4D, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A };
+
+  char buf[255], destfname[255];
+  FILE *fdest, *fsource;
+
+    std::cout << argc << std::endl;
+  if( argc < 2 ) { // no arguments provided
+    std::cout << "Error: not enough arguments\n\nUsage: apng2mng image.apng [image.mng]\n\n" << std::endl;
+    exit(EXIT_FAILURE);
+  } else if( (argc == 2) || (argc == 3) ) { // enough arguments
+    if( argc == 3 ) strcpy(destfname, argv[2]); // both arguments supplied
+  } else { // too many arguments
+    std::cout << "Error: too many argument\n\nUsage: apng2mng image.apng [image.mng]\n\n" << std::endl;
+    exit(EXIT_FAILURE);
+  }
+
+  // the next step
+  // TODO check if file exists here
+  fsource = fopen(argv[1], "rb");
+  fread(buf, sizeof(char), 8, fsource);
+
+  if( !memcmp(buf, png_signature, sizeof(png_signature)) ) { // apng2mng
+    if( destfname == NULL ) {
+      std::string _destfname = argv[1];
+      _destfname = basename(_destfname);
+      //.removeExtension() << ".mng"
+      strcpy(destfname, _destfname.c_str());
+    }
+
+    std::cout << "Performing APNG-to-MNG conversion of argv[1] to destfname\n" << std::endl;
+  } else if( !memcmp(buf, mng_signature, sizeof(mng_signature)) ) { // mng2apng
+    if( destfname == NULL ) {
+      std::string _destfname = argv[1];
+      _destfname = basename(_destfname);
+      //.removeExtension() << ".apng"
+      strcpy(destfname, _destfname.c_str());
+    }
+
+    std::cout << "Performing MNG-to-APNG conversion of argv[1] to destfname\n" << std::endl;
+  } else {
+    std::cout << "Error: wrong input file\n\n" << std::endl;
+    exit(EXIT_FAILURE);
+  }
+
+  fdest = fopen(destfname, "wb");
+
 #ifdef APNG_READ_SUPPORTED
   // assembler.reset();
 
   // TODO determine the file type here (apng or mng)
-  // XXX put a warning if it's just 1 frame (or plain png)
+  // XXX put a warning if it's just 1 frame (and/or a plain png)
 
   std::cout << "Converting APNG file penguins.apng to penguins.mng..." << std::endl;
   std::vector<apngasm::APNGFrame> frames = assembler.disassemble("penguins.apng");
   std::cout << frames.size() << " Frames" << std::endl;
-  assembler.savePNGs("."); // "out"
-#ifdef APNG_SPECS_SUPPORTED
-  // XXX add the -s flag to the cli for the spec. files to be saved
-  assembler.saveJSON("penguins.json", "."); // "out"
-  assembler.saveXML("penguins.xml", "."); // "out"
+  assembler.savePNGs("./"); // TODO stream the frames as a vector into libmng here
+#if 0 // #ifdef APNG_SPECS_SUPPORTED
+  assembler.saveJSON("penguins.json", "./");
+  assembler.saveXML("penguins.xml", "./");
 #endif
   std::cout << "Done!" << std::endl;
 #endif
@@ -106,5 +170,10 @@ int main(int argc, char* argv[])
   std::cout << "Test 5 - finish" << std::endl;
 */
 
-  return 0;
+
+  fclose(fdest);
+  fclose(fsource);
+
+  exit(EXIT_SUCCESS);
 }
+
