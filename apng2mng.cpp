@@ -1,7 +1,10 @@
-#include <apngasm.h> // will just <apngframe.h> be enough?
+#include <apngasm.h>
 #include <iostream>
 #include <cstdlib>
-#include "mng.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+// #include "mng.h"
 
 std::string basename(std::string filename)
 {
@@ -9,6 +12,7 @@ std::string basename(std::string filename)
   pos = (pos!=std::string::npos) ? pos+1 : 0;
   return filename.substr(pos, filename.length() - pos - (filename.find_last_of("\"") != std::string::npos));
 }
+
 
 std::string removeExtension(std::string filename) {
   size_t lastdot = filename.find_last_of(".");
@@ -77,8 +81,9 @@ int main(int argc, char* argv[])
     if( destfname == NULL ) {
       std::string _destfname = argv[1];
       _destfname = basename(_destfname);
+      _destfname = removeExtension(_destfname);
       //.removeExtension() << ".mng"
-      strcpy(destfname, _destfname.c_str());
+      strcpy(destfname, "_destfname.c_str()");
     }
 
     std::cout << "Performing APNG-to-MNG conversion of argv[1] to destfname\n" << std::endl;
@@ -86,8 +91,9 @@ int main(int argc, char* argv[])
     if( destfname == NULL ) {
       std::string _destfname = argv[1];
       _destfname = basename(_destfname);
+      _destfname = removeExtension(_destfname);
       //.removeExtension() << ".apng"
-      strcpy(destfname, _destfname.c_str());
+      strcpy(destfname, "_destfname.c_str()");
     }
 
     std::cout << "Performing MNG-to-APNG conversion of argv[1] to destfname\n" << std::endl;
