@@ -31,7 +31,7 @@ Installation
 Usage
 -----
 
-> apng2mng penguins.apng penguins.mng
+> apng2mng penguins.apng
 
 > apng2mng penguins.mng penguins_again.apng
 
