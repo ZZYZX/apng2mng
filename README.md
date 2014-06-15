@@ -26,15 +26,7 @@ http://sourceforge.net/projects/libmng
 Installation
 ------------
 
-Requires `cmake` to build.
-
-> mkdir build && cd build
-
-> cmake ..
-
 > make
-
-If all went well, you should have apng2mng binary in the ./build/out folder.
 
 Usage
 -----
