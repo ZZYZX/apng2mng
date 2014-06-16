@@ -1,10 +1,12 @@
 #include <apngasm.h>
 #include <iostream>
+#include <fstream>
 #include <cstdlib>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-// #include "mng.h"
+
+using namespace std;
 
 std::string basename(std::string filename)
 {
@@ -21,6 +23,15 @@ std::string removeExtension(std::string filename) {
     return filename;
 
   return filename.substr(0, lastdot); 
+}
+
+inline bool file_exists(const std::string& name) {
+    if (FILE *file = fopen(name.c_str(), "r")) {
+        fclose(file);
+        return true;
+    } else {
+        return false;
+    }   
 }
 
 int main(int argc, char* argv[])
@@ -59,51 +70,55 @@ int main(int argc, char* argv[])
   static const char mng_signature[8] = { 0x8A, 0x4D, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A };
 
   char buf[255], destfname[255];
-  FILE *fdest, *fsource;
+  FILE *fsource;
+  std::string _destfname;
 
   if( argc < 2 ) { // no arguments provided
     std::cout << "Error: not enough arguments\n\nUsage: apng2mng image.apng [image.mng]\n\n" << std::endl;
     exit(EXIT_FAILURE);
   } else if( (argc == 2) || (argc == 3) ) { // enough arguments
-    if( argc == 3 ) strcpy(destfname, argv[2]); // both arguments supplied
+    if( argc == 3 ) // both arguments supplied
+      _destfname = argv[2];
   } else { // too many arguments
     std::cout << "Error: too many argument\n\nUsage: apng2mng image.apng [image.mng]\n\n" << std::endl;
     exit(EXIT_FAILURE);
   }
 
-  // the next step
-  // TODO check if file exists here
+  // check if input file exists
+  if( !file_exists(argv[1]) ) {
+    std::cout << "File argv[1] does not exist\n" << std::endl;
+    exit(EXIT_FAILURE);
+  }
+
+  // the next step  
   fsource = fopen(argv[1], "rb");
   fread(buf, sizeof(char), 8, fsource);
 
   if( !memcmp(buf, png_signature, sizeof(png_signature)) ) { // apng2mng
     if( destfname == NULL ) {
-      std::string _destfname = argv[1];
+      _destfname = argv[1];
       _destfname = basename(_destfname);
       _destfname = removeExtension(_destfname);
       // << ".mng"
-      strcpy(destfname, _destfname.c_str());
-      std::cout << _destfname << std::endl;
     }
-
     std::cout << "Performing APNG-to-MNG conversion of argv[1] to destfname\n" << std::endl;
   } else if( !memcmp(buf, mng_signature, sizeof(mng_signature)) ) { // mng2apng
     if( destfname == NULL ) {
-      std::string _destfname = argv[1];
+      _destfname = argv[1];
       _destfname = basename(_destfname);
       _destfname = removeExtension(_destfname);
       // << ".apng"
-      strcpy(destfname, _destfname.c_str());
-      std::cout << _destfname << std::endl;
     }
-
     std::cout << "Performing MNG-to-APNG conversion of argv[1] to destfname\n" << std::endl;
   } else {
-    std::cout << "Error: wrong input file\n\n" << std::endl;
+    std::cout << "Error: argv[1] seems to be neither APNG nor MNG file\n\n" << std::endl;
     exit(EXIT_FAILURE);
   }
 
-  // fdest = fopen(destfname, "wb"); // XXX creates empty files with trashy names
+  ofstream fdest;
+  fdest.open("_destfname.c_str()");
+  fdest << "Writing this to a file.\n";
+  fdest.close();
 
 #ifdef APNG_READ_SUPPORTED
   // assembler.reset();
