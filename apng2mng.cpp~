@@ -340,7 +340,7 @@ int init_libs(){
   mng_setcb_processheader(mng, mymngprocessheader);
 
   /* set the writing callbacks */
-  mng_setcb_writedata(    mng, mng_write_stream);
+//  mng_setcb_writedata(    mng, mng_write_stream);
 
   return true;
 }/* int init_libs() */
