@@ -1,4 +1,11 @@
+
 #include <apngasm.h>
+
+/* libmng is all split by defines so you need to enable each part on the libmng.h to use */
+#define MNG_SUPPORT_READ
+#define MNG_SUPPORT_WRITE
+#define MNG_ACCESS_CHUNKS
+
 #include <libmng.h>
 #include <iostream>
 #include <fstream>
@@ -13,11 +20,15 @@ using namespace std;
 /* apng library data */
 apngasm::APNGAsm assembler;
 
+/* libmng library handler */
+mng_handle  mng;
+  
 /* structure for keeping track of our mng stream inside the callbacks */
 typedef struct {
-  FILE    *file;     /* pointer to the file we're decoding */
-  char    *filename; /* pointer to the file's path/name */
-  mng_uint32  delay;     /* ticks to wait before resuming decode */
+  FILE       *file;     /* pointer to the file we're decoding */
+  char       *mode;     /* string for fopen mode param */
+  char       *filename; /* pointer to the file's path/name */
+  mng_uint32  delay;    /* ticks to wait before resuming decode */
 } mngstuff;  
 
 /* datatype for color */
@@ -32,7 +43,7 @@ typedef union
 } RGBA;
 
 /* structure for mng file info */
-typedef struct _file_info
+typedef struct _mng_file_info
 {
 	FILE* f;
 	char* fname;
@@ -48,20 +59,30 @@ typedef struct _file_info
 	int clone;
 	unsigned short precloneid;
 	int preclone;
-	struct _file_info* next;
-} file_info;
+	struct _mng_file_info* next;
+} mng_file_info;
 
-/* pointer to file_info linked list */
-file_info* Infos = NULL;
+/* pointer to mng_file_info linked list */
+mng_file_info* Infos = NULL;
 
-/* delete single structure file_info */
-void file_info_cleanup (file_info* ms)
+/* set up mng_file_info structure */
+void
+mng_file_info_init (mng_file_info* ms)
 {
-	file_info* fi = ms;
+	memset(ms, 0, sizeof(*ms));
+	ms->identical = -1;
+	ms->clone = -1;
+	ms->preclone = -1;
+}
+
+/* delete single structure mng_file_info */
+void mng_file_info_cleanup (mng_file_info* ms)
+{
+	mng_file_info* fi = ms;
 
 	while (fi)
 	{
-		file_info* tempi = fi;
+		mng_file_info* tempi = fi;
 
 		if (fi->image)
 		{
@@ -86,10 +107,10 @@ void file_info_cleanup (file_info* ms)
 		if (tempi != ms)
 			free (tempi);
 	}
-} /* void file_info_cleanup (file_info* ms) */
+} /* void mng_file_info_cleanup (mng_file_info* ms) */
 
-/* recursively delete file_info */
-void file_info_free ()
+/* recursively delete mng_file_info */
+void mng_file_info_free ()
 {
 	int i;
 
@@ -97,12 +118,12 @@ void file_info_free ()
 	{
 //		for (i = 0; i < cFiles; i++)
 		for (i = 0; i < 1; i++) // i < 1 should be i < infoslength
-			file_info_cleanup (Infos + i);
+			mng_file_info_cleanup (Infos + i);
 
 		free (Infos);
 		Infos = 0;
 	}
-} /* void file_info_free() */
+} /* void mng_file_info_free() */
 
 
 /* private application data */
@@ -153,12 +174,12 @@ mng_bool mymngopenstream(mng_handle mng)
   mngstuff  *mymng;
 
   /* look up our stream struct */
-        mymng = (mngstuff*)mng_get_userdata(mng);
+  mymng = (mngstuff*)mng_get_userdata(mng);
   
   /* open the file */
-  mymng->file = fopen(mymng->filename, "rb");
+  mymng->file = fopen(mymng->filename, mymng->mode);
   if (mymng->file == NULL) {
-    fprintf(stderr, "unable to open '%s'\n", mymng->filename);
+    fprintf(stderr, "unable to open '%s' for %s\n", mymng->filename, (mymng->mode[0] == 'r' ? "read" : "write"));
     return MNG_FALSE;
   }
 
@@ -167,9 +188,9 @@ mng_bool mymngopenstream(mng_handle mng)
 
 mng_bool mng_write_stream (mng_handle mng, mng_ptr buffer, mng_uint32 size, mng_uint32p bytes)
 {
-	file_info* ms;
+	mng_file_info* ms;
 
-	ms = (file_info*) mng_get_userdata (mng);
+	ms = (mng_file_info*) mng_get_userdata (mng);
 
 	*bytes = fwrite(buffer, 1, size, ms->f);
 
@@ -316,7 +337,6 @@ int init_libs(){
   std::cout << "Initializing libmng " << MNG_VERSION_TEXT << std::endl;
   
   mngstuff   *mymng;
-  mng_handle  mng;
   
   /* allocate our stream data structure */
   mymng = (mngstuff*)calloc(1, sizeof(*mymng));
@@ -340,11 +360,25 @@ int init_libs(){
   mng_setcb_processheader(mng, mymngprocessheader);
 
   /* set the writing callbacks */
-//  mng_setcb_writedata(    mng, mng_write_stream);
+  mng_setcb_writedata(    mng, mng_write_stream);
 
+	mng_set_userdata(       mng, &mymng);
   return true;
 }/* int init_libs() */
 
+void printerror(){
+//MNG_EXT mng_retcode MNG_DECL mng_getlasterror    (mng_handle    hHandle,
+  mng_int8     iSeverity;
+  mng_chunkid  iChunkname;
+  mng_uint32   iChunkseq;
+  mng_int32    iExtra1;
+  mng_int32    iExtra2;
+  mng_pchar    zErrortext;
+  mng_getlasterror(mng, &iSeverity, &iChunkname, &iChunkseq, &iExtra1, &iExtra2, &zErrortext);
+  cout << "error: " << zErrortext << endl;
+}
+
+/* open a APNG file and write the frames into the MNG file pointed by dest */
 int apng2mng(string source, string dest){
   string xmlpath = "./" + removeExtension(basename(source)) + ".xml";
   std::cout << "writing into mng file " << dest << std::endl;
@@ -357,6 +391,143 @@ int apng2mng(string source, string dest){
   assembler.saveXML(xmlpath, "./");
 #endif
 
+  mngstuff  *mymng;
+  mymng = (mngstuff*)mng_get_userdata(mng);
+  mymng->filename = const_cast<char*>(dest.c_str()); /* mng is C-based */
+  mymng->mode = "wb"; /* fopen arg */
+  
+  int ret;
+  ret = mng_create (mng);
+  if (ret != MNG_NOERROR)
+    //std::cout << "Could not create " << dest << std::endl;
+    printerror();
+  else
+    std::cout << "writing MNG file " << dest << std::endl;
+
+  //printerror();
+
+  apngasm::APNGFrame  *f = &frames[0];
+  
+/* create mng file with defaults from the first frame of apng */
+  mng_uint32 canvas_width, canvas_height, ticks, layers, framecount;
+  canvas_width  = (mng_uint32) f->width();
+  canvas_height = (mng_uint32) f->height();
+  ticks         = (mng_uint32) (frames.size() > 1 ? f->delayNum() : 0 ); /* if apng is not static, set mng ticks as the first frame */
+  layers        = (mng_uint32) frames.size();
+  framecount    = (mng_uint32) frames.size();
+//std::cout << "ticks dn " << f->delayNum() << " dd " <<f->delayDen() << " tix " << 1000*(f->delayNum() / f->delayDen())  << endl;;
+
+//1982	MNG_EXT mng_retcode MNG_DECL mng_putchunk_mhdr (mng_handle hHandle,
+//1983	mng_uint32 iWidth,
+//1984	mng_uint32 iHeight,
+//1985	mng_uint32 iTicks,
+//1986	mng_uint32 iLayercount,
+//1987	mng_uint32 iFramecount,
+//1988	mng_uint32 iPlaytime,
+//1989	mng_uint32 iSimplicity);
+  cout << "Adding MHDR ";
+  ret = mng_putchunk_mhdr (
+      mng, canvas_width, canvas_height, ticks, layers, framecount, ticks*framecount,
+      /* file simplicity profile */
+      MNG_SIMPLICITY_VALID |
+      MNG_SIMPLICITY_SIMPLEFEATURES |
+      MNG_SIMPLICITY_COMPLEXFEATURES | 
+      MNG_SIMPLICITY_DELTAPNG | 
+      0x240 /* bit6 validity, bit9 Stored object buffers*/
+  );
+  if(ret != MNG_NOERROR) printerror();
+  
+  { /* lets not pollute the namespace */
+    //Greyscale 	          0
+    //Truecolour 	          2
+    //Indexed-colour      	3
+    //Greyscale with alpha 	4
+    //Truecolour with alpha 6
+    string type;
+    switch(f->colorType()){
+      case 0: type = "Greyscale"; break;
+      case 2: type = "Truecolor"; break;
+      case 3: type = "Indexed-color"; break;
+      case 4: type = "Greyscale w alpha"; break;
+      case 6: type = "Truecolor w alpha"; break;
+      default: type = "Type unknown"; break;
+    }
+    cout << "color_type=" << type << "(" << (int)f->colorType() << ")\n";
+  } /* colour type information */
+  
+  unsigned char ctype = f->colorType();
+  if(ctype == 3){ /* PNG specs say PLTE chunk goes 3, 2 and 6 but for 2 and is optional so lets omit those */
+    cout << "Adding PLTE size=" << f->paletteSize() << "\n";
+    mng_palette8e mng_pal[256];
+    apngasm::rgb          *apng_pal = f->palette();
+    for( int i=0;i!=256;i++) {
+      mng_pal[i].iRed   = apng_pal->r;
+      mng_pal[i].iGreen = apng_pal->g;
+      mng_pal[i].iBlue  = apng_pal->b;
+      //alpha
+    } /* for palette */
+    ret = mng_putchunk_plte (mng, f->paletteSize(), mng_pal);
+    if(ret != MNG_NOERROR) printerror();
+  }/* PNG color type needs PLTE chunk */
+  
+//  MNG_EXT mng_retcode MNG_DECL mng_getchunk_srgb       (mng_handle       hHandle,
+//                                                      mng_handle       hChunk,
+//                                                      mng_bool         *bEmpty,
+//                                                      mng_uint8        *iRenderingintent);
+  cout << "Adding sRGB\n";
+  ret = mng_putchunk_srgb(mng, 0, 0);
+  if(ret != MNG_NOERROR) printerror();
+  
+//  MNG_EXT mng_retcode MNG_DECL mng_putchunk_defi       (mng_handle       hHandle,
+//                                                      mng_uint16       iObjectid,
+//                                                      mng_uint8        iDonotshow,
+//                                                      mng_uint8        iConcrete,
+//                                                      mng_bool         bHasloca,
+//                                                      mng_int32        iXlocation,
+//                                                      mng_int32        iYlocation,
+//                                                      mng_bool         bHasclip,
+//                                                      mng_int32        iLeftcb,
+//                                                      mng_int32        iRightcb,
+//                                                      mng_int32        iTopcb,
+//                                                      mng_int32        iBottomcb);
+  cout << "Adding DEFI objid=" << 1 << endl;
+  ret = mng_putchunk_defi(mng, 1, 0, 1, false, 0, 0, false, 0, f->width(), 0, f->height());
+  if(ret != MNG_NOERROR) printerror();
+  
+//MNG_EXT mng_retcode MNG_DECL mng_putchunk_ihdr       (mng_handle       hHandle,
+//                                                      mng_uint32       iWidth,
+//                                                      mng_uint32       iHeight,
+//                                                      mng_uint8        iBitdepth,
+//                                                      mng_uint8        iColortype,
+//                                                      mng_uint8        iCompression,
+//                                                      mng_uint8        iFilter,
+//                                                      mng_uint8        iInterlace);
+  cout << "Adding IHDR w=" << f->width() << ", h=" << f->height() << "\n";
+  ret = mng_putchunk_ihdr(mng, f->width(), f->height(), 8, f->colorType(), 0,0,0); /* apngasm says those are the default @ apngasm.cpp:1311 */
+  if(ret != MNG_NOERROR) printerror();
+  
+//  MNG_EXT mng_retcode MNG_DECL mng_putchunk_idat       (mng_handle       hHandle,
+//                                                      mng_uint32       iRawlen,
+//                                                      mng_ptr          pRawdata);
+  cout << "Adding IDAT len=" << f->width() * f->height() << "\n";
+  ret = mng_putchunk_idat(mng, f->width() * f->height(), f->pixels());
+  if(ret != MNG_NOERROR) printerror();
+  
+  cout << "Adding IEND\n"
+  ret = mng_putchunk_iend(mng);
+  if(ret != MNG_NOERROR) printerror();
+  
+  cout << "Writing.\n";
+  ret = mng_write (mng);
+  if(ret != MNG_NOERROR) printerror();
+  mng_cleanup (&mng);
+  
+  if(ret == MNG_NOERROR)
+    std::cout << "Finished." << std::endl;
+  else
+    std::cout << "Something went wrong." << std::endl;
+    
+  return ret;
 /*
 #ifdef APNG_WRITE_SUPPORTED
   assembler.reset();
