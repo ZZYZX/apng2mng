@@ -159,13 +159,13 @@ std::string removeExtension(std::string filename) {
 mng_ptr mymngalloc(mng_size_t len)
 {
   return calloc(1, len);
-}/* mng_ptr mymngalloc(mng_uint32 size) */
+}/* mng_ptr mymngalloc(mng_size_t len) */
 
 /* memory deallocation */
 void mymngfree(mng_ptr p, mng_size_t len)
 {
   free(p);
-} /* void mymngfree(mng_ptr p, mng_uint32 size) */
+} /* void mymngfree(mng_ptr p, mng_size_t len) */
 
 mng_bool mymngopenstream(mng_handle mng)
 {
