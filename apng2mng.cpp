@@ -1,3 +1,9 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <iostream>
+#include <fstream>
+#include <cstdlib>
 
 #include <apngasm.h>
 
@@ -5,14 +11,7 @@
 #define MNG_SUPPORT_READ
 #define MNG_SUPPORT_WRITE
 #define MNG_ACCESS_CHUNKS
-
 #include <libmng.h>
-#include <iostream>
-#include <fstream>
-#include <cstdlib>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
 using namespace std;
 /* libraries stuff */
@@ -21,7 +20,7 @@ using namespace std;
 apngasm::APNGAsm assembler;
 
 /* libmng library handler */
-mng_handle  mng;
+mng_handle mng;
   
 /* structure for keeping track of our mng stream inside the callbacks */
 typedef struct {
@@ -29,7 +28,7 @@ typedef struct {
   char       *mode;     /* string for fopen mode param */
   char       *filename; /* pointer to the file's path/name */
   mng_uint32  delay;    /* ticks to wait before resuming decode */
-} mngstuff;  
+} mngstuff; 
 
 /* datatype for color */
 typedef union
@@ -157,16 +156,15 @@ std::string removeExtension(std::string filename) {
 /* callbacks for the mng decoder */
 
 /* memory allocation; data must be zeroed */
-mng_ptr mymngalloc(mng_uint32 size)
+mng_ptr mymngalloc(mng_size_t len)
 {
-  return (mng_ptr)calloc(1, size);
+  return calloc(1, len);
 }/* mng_ptr mymngalloc(mng_uint32 size) */
 
 /* memory deallocation */
-void mymngfree(mng_ptr p, mng_uint32 size)
+void mymngfree(mng_ptr p, mng_size_t len)
 {
   free(p);
-  return;
 } /* void mymngfree(mng_ptr p, mng_uint32 size) */
 
 mng_bool mymngopenstream(mng_handle mng)
@@ -197,19 +195,17 @@ mng_bool mng_write_stream (mng_handle mng, mng_ptr buffer, mng_uint32 size, mng_
 	return MNG_TRUE;
 } /* mng_bool mng_write_stream(..) */
 
-mng_bool mymngclosestream(mng_handle mng)
+mng_bool mymngclosestream(mng_handle handle)
 {
-  mngstuff  *mymng;
-
   /* look up our stream struct */
-        mymng = (mngstuff*)mng_get_userdata(mng);
+  mngstuff *mymng = (mngstuff*)mng_get_userdata(handle);
 
   /* close the file */
   fclose(mymng->file);
   mymng->file = NULL; /* for safety */
 
   return MNG_TRUE;
-} /* mng_bool mymngclosestream(mng_handle mng) */
+} /* mng_bool mymngclosestream(mng_handle handle) */
 
 /* feed data to the decoder */
 mng_bool mymngreadstream(mng_handle mng, mng_ptr buffer, mng_uint32 size, mng_uint32 *bytesread)
@@ -249,7 +245,6 @@ mng_ptr mymnggetcanvasline(mng_handle mng, mng_uint32 line)
   /* dereference our structure */
   mymng = (mngstuff*)mng_get_userdata(mng);
 
- 
   return (row); 
 } /* mng_ptr mymnggetcanvasline(mng_handle mng, mng_uint32 line) */
 
