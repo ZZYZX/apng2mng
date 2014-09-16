@@ -5,3 +5,5 @@ apng2mng
 *.mng
 *.apng
 *~
+*.xml
+
