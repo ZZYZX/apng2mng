@@ -1,35 +1,4 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <iostream>
-#include <fstream>
-#include <cstdlib>
-
-#include <apngasm.h>
-
-/* libmng is all split by defines so you need to enable each part on the libmng.h to use */
-
-#if !defined(MNG_SUPPORT_FULL)
-#define MNG_SUPPORT_FULL 1
-#endif
-
-#if !defined(MNG_SUPPORT_READ)
-#define MNG_SUPPORT_READ 1
-#endif
-
-#if !defined(MNG_SUPPORT_WRITE)
-#define MNG_SUPPORT_WRITE 1
-#endif
-
-#if !defined(MNG_SUPPORT_DISPLAY)
-#define MNG_SUPPORT_DISPLAY 1
-#endif
-
-#if !defined(MNG_ACCESS_CHUNKS)
-#define MNG_ACCESS_CHUNKS 1
-#endif
-
-#include <libmng.h>
+#include <apng2mng.h>
 
 using namespace std;
 /* libraries stuff */
@@ -42,6 +11,8 @@ mng_handle mng;
 
 /* this baby will be compressing things for us */
 z_stream zstream;
+unsigned char* zbuffer = NULL;
+unsigned int zbuffer_len = 0;
 
 /* structure for keeping track of our mng stream inside the callbacks */
 typedef struct {
@@ -342,9 +313,9 @@ int mymngquit(mng_handle mng)
 
 } /* int mymngquit(mng_handle mng) */
 
-int init_mnglib(){
-
-} /* int init_mnglib() */
+// int init_mnglib(){
+// 
+// } /* int init_mnglib() */
 
 int init_libs(){
   std::cout << "Initializing apngasm " << assembler.version() << std::endl;
@@ -368,16 +339,16 @@ int init_libs(){
   }
 
   /* set the reading callbacks */
-  mng_setcb_errorproc(    mng, mymngerror);
-  mng_setcb_openstream(   mng, mymngopenstream);
-  mng_setcb_closestream(  mng, mymngclosestream);
-  mng_setcb_readdata(     mng, mymngreadstream);
+  mng_setcb_errorproc(mng, mymngerror);
+  mng_setcb_openstream(mng, mymngopenstream);
+  mng_setcb_closestream(mng, mymngclosestream);
+  mng_setcb_readdata(mng, mymngreadstream);
   mng_setcb_processheader(mng, mymngprocessheader);
 
   /* set the writing callbacks */
-  mng_setcb_writedata(    mng, mng_write_stream);
+  mng_setcb_writedata(mng, mng_write_stream);
 
-	mng_set_userdata(       mng, &mymng);
+	mng_set_userdata(mng, &mymng);
   return true;
 }/* int init_libs() */
 
@@ -396,7 +367,7 @@ void printerror(){
 /* open a APNG file and write the frames into the MNG file pointed by dest */
 int apng2mng(string source, string dest){
   string xmlpath = "./" + removeExtension(basename(source)) + ".xml";
-  std::cout << "writing into mng file " << dest << std::endl;
+  std::cout << "Performing APNG-to-MNG conversion from " << source << " to " << dest << std::endl;
 
 #ifdef APNG_READ_SUPPORTED
   std::vector<apngasm::APNGFrame> frames = assembler.disassemble(source);
@@ -412,7 +383,7 @@ int apng2mng(string source, string dest){
   mymng->mode = "wb"; /* fopen arg */
 
   int ret;
-  ret = mng_create (mng);
+  ret = mng_create(mng);
   if (ret != MNG_NOERROR)
     //std::cout << "Could not create " << dest << std::endl;
     printerror();
@@ -421,13 +392,13 @@ int apng2mng(string source, string dest){
 
   //printerror();
 
-  apngasm::APNGFrame  *f = &frames[0];
+  apngasm::APNGFrame *f = &frames[0];
 
 /* create mng file with defaults from the first frame of apng */
   mng_uint32 canvas_width, canvas_height, ticks, layers, framecount;
   canvas_width  = (mng_uint32) f->width();
   canvas_height = (mng_uint32) f->height();
-  ticks         = (mng_uint32) (frames.size() > 1 ? f->delayNum() : 0 ); /* if apng is not static, set mng ticks as the first frame */
+  ticks         = (mng_uint32) ((frames.size() > 1) ? f->delayNum() : 0 ); /* if apng is not static, set mng ticks as the first frame */
   layers        = (mng_uint32) frames.size();
   framecount    = (mng_uint32) frames.size();
 //std::cout << "ticks dn " << f->delayNum() << " dd " <<f->delayDen() << " tix " << 1000*(f->delayNum() / f->delayDen())  << endl;;
@@ -441,7 +412,7 @@ int apng2mng(string source, string dest){
 //1988	mng_uint32 iPlaytime,
 //1989	mng_uint32 iSimplicity);
   cout << "Adding MHDR ";
-  ret = mng_putchunk_mhdr (
+  ret = mng_putchunk_mhdr(
       mng, canvas_width, canvas_height, ticks, layers, framecount, ticks*framecount,
       /* file simplicity profile */
       MNG_SIMPLICITY_VALID |
@@ -475,7 +446,7 @@ int apng2mng(string source, string dest){
     cout << "Adding PLTE size=" << f->paletteSize() << "\n";
     mng_palette8e mng_pal[256];
     apngasm::rgb          *apng_pal = f->palette();
-    for( int i=0;i!=256;i++) {
+    for(int i = 0; i != 256; i++) {
       mng_pal[i].iRed   = apng_pal->r;
       mng_pal[i].iGreen = apng_pal->g;
       mng_pal[i].iBlue  = apng_pal->b;
@@ -518,17 +489,59 @@ int apng2mng(string source, string dest){
 //                                                      mng_uint8        iFilter,
 //                                                      mng_uint8        iInterlace);
   cout << "Adding IHDR w=" << f->width() << ", h=" << f->height() << "\n";
-  ret = mng_putchunk_ihdr(mng, f->width(), f->height(), 8, f->colorType(), 0,0,0); /* apngasm says those are the default @ apngasm.cpp:1311 */
+  ret = mng_putchunk_ihdr(mng, f->width(), f->height(), MNG_BITDEPTH_8, f->colorType(),
+                          MNG_COMPRESSION_DEFLATE, MNG_FILTER_ADAPTIVE, MNG_INTERLACE_NONE);
+                          /* apngasm says those are the default @ apngasm.cpp:1311 */
   if(ret != MNG_NOERROR) printerror();
+
+  zstream.zalloc = Z_NULL;
+  zstream.zfree = Z_NULL;
+  zstream.opaque = Z_NULL;
+
+  if (deflateInit(&zstream, /* Z_BEST_COMPRESSION */ Z_DEFAULT_COMPRESSION) != Z_OK)
+  {
+    // synfig::error("%s:%d deflateInit()", __FILE__, __LINE__);
+    return false;
+  }
+
+  if (zbuffer == NULL)
+  {
+    zbuffer_len = deflateBound(&zstream,((4*f->width())+1)*f->height());
+    zbuffer = (unsigned char*)realloc(zbuffer, zbuffer_len);
+  }
+
+  zstream.avail_out = zbuffer_len;
+  zstream.next_out  = zbuffer;
 
 //  MNG_EXT mng_retcode MNG_DECL mng_putchunk_idat     (mng_handle       hHandle,
 //                                                      mng_uint32       iRawlen,
 //                                                      mng_ptr          pRawdata);
+
+
+  if (deflate(&zstream,Z_FINISH) != Z_STREAM_END)
+  {
+    // synfig::error("%s:%d deflate()", __FILE__, __LINE__);
+    // return;
+  }
+  if (deflateEnd(&zstream) != Z_OK)
+  {
+    // synfig::error("%s:%d deflateEnd()", __FILE__, __LINE__);
+    // return;
+  }
+  if (mng != MNG_NULL)
+  {
+    // mng_putchunk_idat(mng, zstream.next_out-zbuffer, zbuffer);
+    // mng_putchunk_iend(mng);
+  }
+
+
   cout << "Adding IDAT len=" << f->width() * f->height() << "\n";
-  ret = mng_putchunk_idat(mng, f->width() * f->height(), f->pixels());
+    mng_putchunk_idat(mng, zstream.next_out-zbuffer, zbuffer);
+  // ret = mng_putchunk_idat(mng, f->width() * f->height(), f->pixels());
   if(ret != MNG_NOERROR) printerror();
 
   cout << "Adding IEND\n";
+  // ret = mng_putchunk_mend(mng);
   ret = mng_putchunk_iend(mng);
   if(ret != MNG_NOERROR) printerror();
 
@@ -536,6 +549,7 @@ int apng2mng(string source, string dest){
   ret = mng_write(mng);
   if(ret != MNG_NOERROR) printerror();
   mng_cleanup(&mng);
+  if (zbuffer != NULL) { free(zbuffer); zbuffer = NULL; zbuffer_len = 0; }
 
   if(ret == MNG_NOERROR)
     std::cout << "Finished." << std::endl;
@@ -603,7 +617,8 @@ int apng2mng(string source, string dest){
 } /* int apng2mng() */
 
 int mng2apng(string source, string dest){
-  std::cout << "converting mng file " << source << " into apng file " << dest << std::endl;
+  std::cout << "Performing MNG-to-APNG conversion from " << source << " to " << dest << std::endl;
+
   return true;
 } /* int mng2apng() */
 
@@ -620,6 +635,9 @@ int identify_file( FILE *fsource){
     format = format_mng;
   /* file is neither APNG nor MNG, die.*/
   }
+
+  fclose(fsource);
+
   return format;
 } /* int identify_file() */
 
@@ -649,31 +667,27 @@ int main(int argc, char* argv[])
     exit(EXIT_FAILURE);
   }
 
+  init_libs();
+
   /* everything is groovy, carry on */
   sourceformat = identify_file(fsource);
 
-  switch(sourceformat){
+  /* write MNG or APNG file */
+  switch(sourceformat)
+  {
     case format_apng:
-      std::cout << "Performing APNG-to-MNG conversion from " << _sourcefname << " to " << _destfname << std::endl;
-      outputformat = format_mng;
+      apng2mng(_sourcefname, _destfname);
       break;
+
     case format_mng:
-      std::cout << "Performing MNG-to-APNG conversion from " << _sourcefname << " to " << _destfname << std::endl;
-      outputformat = format_apng;
+      mng2apng(_sourcefname, _destfname);
       break;
+
     default:
       std::cout << "Error: " << _sourcefname << " seems to be neither APNG nor MNG file" << std::endl;
       exit(EXIT_FAILURE);
       break;
   }
-
-  fclose(fsource);
-
-  init_libs();
-
-  /* write MNG or APNG file */
-  if(outputformat == format_mng)  apng2mng(_sourcefname, _destfname);
-  if(outputformat == format_apng) mng2apng(_sourcefname, _destfname);
 
   exit(EXIT_SUCCESS);
 }
