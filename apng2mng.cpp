@@ -60,15 +60,6 @@ void mng_file_info_free()
 } /* void mng_file_info_free() */
 
 
-/* private application data */
-
-const unsigned char format_apng = 1; /* file is apng */
-const unsigned char format_mng  = 2; /* file is mng  */
-// APNG/PNG 8-Byte header
-static const char png_signature[8] = { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A };
-//      MNG 8-Byte header
-static const char mng_signature[8] = { 0x8A, 0x4D, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A };
-
 /* teh codez */
 
 string basename(string filename)
@@ -307,6 +298,7 @@ void printerror(){
   mng_getlasterror(mng, &iSeverity, &iChunkname, &iChunkseq, &iExtra1, &iExtra2, &zErrortext);
   cout << "error: " << zErrortext << endl;
 }
+
 
 /* open a APNG file and write the frames into the MNG file pointed by dest */
 int apng2mng(string source, string dest){

@@ -1,3 +1,6 @@
+#ifndef APNG2MNG_H
+#define APNG2MNG_H
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -6,34 +9,37 @@
 #include <cstdlib>
 #include <sys/time.h>
 #include <time.h>
+#include <zlib.h>
 
 #include <apngasm.h>
 
 /* libmng is all split by defines so you need to enable each part on the libmng.h to use */
 
 #if !defined(MNG_SUPPORT_FULL)
-#define MNG_SUPPORT_FULL 1
+#define MNG_SUPPORT_FULL
 #endif
 
 #if !defined(MNG_SUPPORT_READ)
-#define MNG_SUPPORT_READ 1
+#define MNG_SUPPORT_READ
 #endif
 
 #if !defined(MNG_SUPPORT_WRITE)
-#define MNG_SUPPORT_WRITE 1
+#define MNG_SUPPORT_WRITE
 #endif
 
 #if !defined(MNG_SUPPORT_DISPLAY)
-#define MNG_SUPPORT_DISPLAY 1
+#define MNG_SUPPORT_DISPLAY
 #endif
 
 #if !defined(MNG_ACCESS_CHUNKS)
-#define MNG_ACCESS_CHUNKS 1
+#define MNG_ACCESS_CHUNKS
 #endif
 
 #include <libmng.h>
 
+
 using namespace std;
+
 
 /* libraries stuff */
 
@@ -89,6 +95,20 @@ typedef struct _mng_file_info
 
 /* pointer to mng_file_info linked list */
 mng_file_info* Infos = NULL;
+
+/* private application data */
+const unsigned char format_apng = 1; /* file is apng */
+const unsigned char format_mng  = 2; /* file is mng  */
+// APNG/PNG 8-Byte header
+static const char png_signature[8] = { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A };
+//      MNG 8-Byte header
+static const char mng_signature[8] = { 0x8A, 0x4D, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A };
+
+
+#endif
+
+
+
 
 
 
