@@ -32,3 +32,6 @@
 #endif
 
 #include <libmng.h>
+
+using namespace std;
+

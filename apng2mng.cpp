@@ -1,6 +1,5 @@
 #include <apng2mng.h>
 
-using namespace std;
 /* libraries stuff */
 
 /* apng library data */
@@ -127,18 +126,18 @@ static const char mng_signature[8] = { 0x8A, 0x4D, 0x4E, 0x47, 0x0D, 0x0A, 0x1A,
 
 /* teh codez */
 
-std::string basename(std::string filename)
+string basename(string filename)
 {
-  std::size_t pos = filename.find_last_of("/\\:");
-  pos = (pos!=std::string::npos) ? pos+1 : 0;
-  return filename.substr(pos, filename.length() - pos - (filename.find_last_of("\"") != std::string::npos));
+  size_t pos = filename.find_last_of("/\\:");
+  pos = (pos!=string::npos) ? pos+1 : 0;
+  return filename.substr(pos, filename.length() - pos - (filename.find_last_of("\"") != string::npos));
 }
 
 
-std::string removeExtension(std::string filename) {
+string removeExtension(string filename) {
   size_t lastdot = filename.find_last_of(".");
 
-  if (lastdot == std::string::npos)
+  if (lastdot == string::npos)
     return filename;
 
   return filename.substr(0, lastdot);
@@ -318,9 +317,9 @@ int mymngquit(mng_handle mng)
 // } /* int init_mnglib() */
 
 int init_libs(){
-  std::cout << "Initializing apngasm " << assembler.version() << std::endl;
+  cout << "Initializing apngasm " << assembler.version() << endl;
 
-  std::cout << "Initializing libmng " << MNG_VERSION_TEXT << std::endl;
+  cout << "Initializing libmng " << MNG_VERSION_TEXT << endl;
 
   mngstuff   *mymng;
 
@@ -367,12 +366,12 @@ void printerror(){
 /* open a APNG file and write the frames into the MNG file pointed by dest */
 int apng2mng(string source, string dest){
   string xmlpath = "./" + removeExtension(basename(source)) + ".xml";
-  std::cout << "Performing APNG-to-MNG conversion from " << source << " to " << dest << std::endl;
+  cout << "Performing APNG-to-MNG conversion from " << source << " to " << dest << endl;
 
 #ifdef APNG_READ_SUPPORTED
-  std::vector<apngasm::APNGFrame> frames = assembler.disassemble(source);
-  std::cout << frames.size() << " Frames" << std::endl;
-  std::cout << "XML file is " << xmlpath << std::endl;
+  vector<apngasm::APNGFrame> frames = assembler.disassemble(source);
+  cout << frames.size() << " Frames" << endl;
+  cout << "XML file is " << xmlpath << endl;
   assembler.savePNGs("./"); // TODO stream the frames as a vector into libmng here
   assembler.saveXML(xmlpath, "./");
 #endif
@@ -385,10 +384,10 @@ int apng2mng(string source, string dest){
   int ret;
   ret = mng_create(mng);
   if (ret != MNG_NOERROR)
-    //std::cout << "Could not create " << dest << std::endl;
+    //cout << "Could not create " << dest << endl;
     printerror();
   else
-    std::cout << "writing MNG file " << dest << std::endl;
+    cout << "writing MNG file " << dest << endl;
 
   //printerror();
 
@@ -401,7 +400,7 @@ int apng2mng(string source, string dest){
   ticks         = (mng_uint32) ((frames.size() > 1) ? f->delayNum() : 0 ); /* if apng is not static, set mng ticks as the first frame */
   layers        = (mng_uint32) frames.size();
   framecount    = (mng_uint32) frames.size();
-//std::cout << "ticks dn " << f->delayNum() << " dd " <<f->delayDen() << " tix " << 1000*(f->delayNum() / f->delayDen())  << endl;;
+//cout << "ticks dn " << f->delayNum() << " dd " <<f->delayDen() << " tix " << 1000*(f->delayNum() / f->delayDen())  << endl;;
 
 //1982	MNG_EXT mng_retcode MNG_DECL mng_putchunk_mhdr (mng_handle hHandle,
 //1983	mng_uint32 iWidth,
@@ -552,16 +551,16 @@ int apng2mng(string source, string dest){
   if (zbuffer != NULL) { free(zbuffer); zbuffer = NULL; zbuffer_len = 0; }
 
   if(ret == MNG_NOERROR)
-    std::cout << "Finished." << std::endl;
+    cout << "Finished." << endl;
   else
-    std::cout << "Something went wrong." << std::endl;
+    cout << "Something went wrong." << endl;
 
   return ret;
 /*
 #ifdef APNG_WRITE_SUPPORTED
   assembler.reset();
 
-  std::cout << "Test 4 - start" << std::endl;
+  cout << "Test 4 - start" << endl;
   {
     unsigned char * pData=(unsigned char *)malloc(RES*RES*3);
 
@@ -593,23 +592,23 @@ int apng2mng(string source, string dest){
 
     free(pData);
   }
-  std::cout << "Test 4 - finish" << std::endl;
+  cout << "Test 4 - finish" << endl;
 #endif
 
   assembler.reset();
 
-  std::cout << "Test 5 - start" << std::endl;
+  cout << "Test 5 - start" << endl;
   {
     apngasm::APNGFrame frame1 = apngasm::APNGFrame("samples/gold01.png", 15, 100);
     apngasm::APNGFrame frame2 = apngasm::APNGFrame("samples/gold02.png", 15, 100);
-    std::vector<apngasm::APNGFrame> frames;
+    vector<apngasm::APNGFrame> frames;
     frames.push_back(frame1);
     frames.push_back(frame2);
     apngasm::APNGAsm test5Assembler(frames);
-    std::cout << "frames=" << test5Assembler.frameCount() << std::endl;
+    cout << "frames=" << test5Assembler.frameCount() << endl;
     test5Assembler.assemble("out/test5_anim.png");
   }
-  std::cout << "Test 5 - finish" << std::endl;
+  cout << "Test 5 - finish" << endl;
 */
   // fclose(fdest);
 
@@ -617,7 +616,7 @@ int apng2mng(string source, string dest){
 } /* int apng2mng() */
 
 int mng2apng(string source, string dest){
-  std::cout << "Performing MNG-to-APNG conversion from " << source << " to " << dest << std::endl;
+  cout << "Performing MNG-to-APNG conversion from " << source << " to " << dest << endl;
 
   return true;
 } /* int mng2apng() */
@@ -646,28 +645,28 @@ int main(int argc, char* argv[])
 { 
   char sourceformat, outputformat; /* 0 = apng2mng, 1 = mng2apng */
   FILE *fsource;                   /* source file */
-  std::string _destfname;          /* destination file name, should write a MNG file */
-  std::string _sourcefname;        /* source file name, should be APNG format */
+  string _destfname;          /* destination file name, should write a MNG file */
+  string _sourcefname;        /* source file name, should be APNG format */
 
   if( argc < 2 ) { // no arguments provided
-    std::cout << "Error: not enough arguments\n\nUsage: apng2mng image.apng [image.mng]\n\n" << std::endl;
+    cout << "Error: not enough arguments\n\nUsage: apng2mng image.apng [image.mng]\n\n" << endl;
     exit(EXIT_FAILURE);
   } else if( (argc == 2) || (argc == 3) ) { // enough arguments
     _sourcefname = argv[1]; 
     _destfname   = (argv[2] ? argv[2] : removeExtension(basename(_sourcefname)) + ".mng") ; /* simple check to get a proper output file string */
   } else { // too many arguments
-    std::cout << "Error: too many arguments\n\nUsage: apng2mng image.apng [image.mng]\n\n" << std::endl;
-    exit(EXIT_FAILURE);
-  }
-
-  fsource = fopen(_sourcefname.c_str(), "rb");
-  /* if file could not be opened, die */
-  if(fsource == NULL) {
-    std::cout << "Coud not open file '" << _sourcefname << "'" << std::endl;
+    cout << "Error: too many arguments\n\nUsage: apng2mng image.apng [image.mng]\n\n" << endl;
     exit(EXIT_FAILURE);
   }
 
   init_libs();
+
+  fsource = fopen(_sourcefname.c_str(), "rb");
+  /* if file could not be opened, die */
+  if(fsource == NULL) {
+    cout << "Coud not open file '" << _sourcefname << "'" << endl;
+    exit(EXIT_FAILURE);
+  }
 
   /* everything is groovy, carry on */
   sourceformat = identify_file(fsource);
@@ -684,7 +683,7 @@ int main(int argc, char* argv[])
       break;
 
     default:
-      std::cout << "Error: " << _sourcefname << " seems to be neither APNG nor MNG file" << std::endl;
+      cout << "Error: " << _sourcefname << " seems to be neither APNG nor MNG file" << endl;
       exit(EXIT_FAILURE);
       break;
   }
