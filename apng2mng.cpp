@@ -69,7 +69,6 @@ string basename(string filename)
   return filename.substr(pos, filename.length() - pos - (filename.find_last_of("\"") != string::npos));
 }
 
-
 string removeExtension(string filename) {
   size_t lastdot = filename.find_last_of(".");
 
@@ -95,7 +94,7 @@ void mymngfree(mng_ptr p, mng_size_t len)
 
 mng_bool mymngopenstream(mng_handle mng)
 {
-  mngstuff  *mymng;
+  mngstuff *mymng;
 
   /* look up our stream struct */
   mymng = (mngstuff*)mng_get_userdata(mng);
@@ -150,7 +149,7 @@ mng_bool mymngreadstream(mng_handle mng, mng_ptr buffer, mng_uint32 size, mng_ui
 /* the header's been read. set up the display stuff */
 mng_bool mymngprocessheader(mng_handle mng, mng_uint32 width, mng_uint32 height)
 {
-  mngstuff  *mymng;
+  mngstuff *mymng;
   char    title[256];
 
 //  fprintf(stderr, "our mng is %dx%d\n", width,height);
@@ -165,7 +164,7 @@ mng_bool mymngprocessheader(mng_handle mng, mng_uint32 width, mng_uint32 height)
 /* return a row pointer for the decoder to fill */
 mng_ptr mymnggetcanvasline(mng_handle mng, mng_uint32 line)
 {
-  mngstuff  *mymng;
+  mngstuff *mymng;
   mng_ptr   row;
 
   /* dereference our structure */
@@ -186,7 +185,7 @@ mng_uint32 mymnggetticks(mng_handle mng)
 
 mng_bool mymngrefresh(mng_handle mng, mng_uint32 x, mng_uint32 y, mng_uint32 w, mng_uint32 h)
 {
-  mngstuff  *mymng;
+  mngstuff *mymng;
 
   /* dereference our structure */
         mymng = (mngstuff*)mng_get_userdata(mng);
@@ -197,7 +196,7 @@ mng_bool mymngrefresh(mng_handle mng, mng_uint32 x, mng_uint32 y, mng_uint32 w, 
 /* interframe delay callback */
 mng_bool mymngsettimer(mng_handle mng, mng_uint32 msecs)
 {
-  mngstuff  *mymng;
+  mngstuff *mymng;
 
 //  fprintf(stderr,"  pausing for %d ms\n", msecs);
 
@@ -211,7 +210,7 @@ mng_bool mymngerror(mng_handle mng, mng_int32 code, mng_int8 severity,
   mng_chunkid chunktype, mng_uint32 chunkseq,
   mng_int32 extra1, mng_int32 extra2, mng_pchar text)
 {
-  mngstuff  *mymng;
+  mngstuff *mymng;
   char    chunk[5];
 
         /* dereference our data so we can get the filename */
@@ -235,7 +234,7 @@ mng_bool mymngerror(mng_handle mng, mng_int32 code, mng_int8 severity,
 
 int mymngquit(mng_handle mng)
 {
-  mngstuff  *mymng;
+  mngstuff *mymng;
 
   /* dereference our data so we can free it */
   mymng = (mngstuff*)mng_get_userdata(mng);
@@ -313,7 +312,7 @@ int apng2mng(string source, string dest){
   assembler.saveXML(xmlpath, "./");
 #endif
 
-  mngstuff  *mymng;
+  mngstuff *mymng;
   mymng = (mngstuff*)mng_get_userdata(mng);
   mymng->filename = const_cast<char*>(dest.c_str()); /* mng is C-based */
   mymng->mode = "wb"; /* fopen arg */
@@ -321,12 +320,10 @@ int apng2mng(string source, string dest){
   int ret;
   ret = mng_create(mng);
   if (ret != MNG_NOERROR)
-    //cout << "Could not create " << dest << endl;
+    cout << "Could not create " << dest << endl;
     printerror();
   else
     cout << "writing MNG file " << dest << endl;
-
-  //printerror();
 
   apngasm::APNGFrame *f = &frames[0];
 
@@ -340,8 +337,13 @@ int apng2mng(string source, string dest){
 //cout << "ticks dn " << f->delayNum() << " dd " <<f->delayDen() << " tix " << 1000*(f->delayNum() / f->delayDen())  << endl;;
 
   cout << "Adding MHDR ";
-  ret = mng_putchunk_mhdr(
-      mng, canvas_width, canvas_height, ticks, layers, framecount, ticks*framecount,
+  ret = mng_putchunk_mhdr(mng,
+      canvas_width,
+      canvas_height,
+      ticks,
+      layers,
+      framecount,
+      (ticks * framecount),
       /* file simplicity profile */
       MNG_SIMPLICITY_VALID |
       MNG_SIMPLICITY_SIMPLEFEATURES |
