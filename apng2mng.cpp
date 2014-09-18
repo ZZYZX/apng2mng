@@ -245,13 +245,14 @@ int mymngquit(mng_handle mng)
   /* free our data */
   free(mymng);
 
+  return 0;
 } /* int mymngquit(mng_handle mng) */
 
 // int init_mnglib(){
 // 
 // } /* int init_mnglib() */
 
-int init_libs(){
+bool init_libs(){
   cout << "Initializing apngasm " << assembler.version() << endl;
 
   cout << "Initializing libmng " << MNG_VERSION_TEXT << endl;
@@ -283,6 +284,7 @@ int init_libs(){
   mng_setcb_writedata(mng, mng_write_stream);
 
 	mng_set_userdata(mng, &mymng);
+
   return true;
 }/* int init_libs() */
 
@@ -319,11 +321,12 @@ int apng2mng(string source, string dest){
 
   int ret;
   ret = mng_create(mng);
-  if (ret != MNG_NOERROR)
+  if (ret != MNG_NOERROR) {
     cout << "Could not create " << dest << endl;
     printerror();
-  else
+  } else {
     cout << "writing MNG file " << dest << endl;
+  }
 
   apngasm::APNGFrame *f = &frames[0];
 
@@ -488,7 +491,7 @@ int identify_file( FILE *fsource){
 
   /* file is valid APNG ? */
   if( !memcmp(buf, png_signature, sizeof(png_signature)) ) { // apng2mng
-    format = format_apng;
+    format = format_png;
   /* file is not APNG, is it a valid MNG ? */
   } else if( !memcmp(buf, mng_signature, sizeof(mng_signature)) ) { // mng2apng
     format = format_mng;
@@ -503,7 +506,7 @@ int identify_file( FILE *fsource){
 
 int main(int argc, char* argv[])
 { 
-  char sourceformat, outputformat; /* 0 = apng2mng, 1 = mng2apng */
+  char sourceformat; /* 0 = apng2mng, 1 = mng2apng */
   FILE *fsource;                   /* source file */
   string _destfname;          /* destination file name, should write a MNG file */
   string _sourcefname;        /* source file name, should be APNG format */
@@ -512,8 +515,7 @@ int main(int argc, char* argv[])
     cout << "Error: not enough arguments\n\nUsage: apng2mng image.apng [image.mng]\n\n" << endl;
     exit(EXIT_FAILURE);
   } else if ( (argc == 2) || (argc == 3) ) { // enough arguments
-    _sourcefname = argv[1]; 
-    _destfname   = (argv[2] ? argv[2] : removeExtension(basename(_sourcefname)) + ".mng") ; /* simple check to get a proper output file string */
+    _sourcefname = argv[1];
   } else { // too many arguments
     cout << "Error: too many arguments\n\nUsage: apng2mng image.apng [image.mng]\n\n" << endl;
     exit(EXIT_FAILURE);
@@ -534,11 +536,13 @@ int main(int argc, char* argv[])
   /* write MNG or APNG file */
   switch(sourceformat)
   {
-    case format_apng:
+    case format_png:
+      _destfname   = argv[2] ? argv[2] : removeExtension(basename(_sourcefname)) + ".mng";
       apng2mng(_sourcefname, _destfname);
       break;
 
     case format_mng:
+      _destfname   = argv[2] ? argv[2] : removeExtension(basename(_sourcefname)) + ".png";
       mng2apng(_sourcefname, _destfname);
       break;
 
