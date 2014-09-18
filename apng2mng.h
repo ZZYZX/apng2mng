@@ -37,22 +37,7 @@
 
 #include <libmng.h>
 
-
 using namespace std;
-
-
-/* libraries stuff */
-
-/* apng library data */
-apngasm::APNGAsm assembler;
-
-/* libmng library handler */
-mng_handle mng;
-
-/* this baby will be compressing things for us */
-z_stream zstream;
-unsigned char* zbuffer = NULL;
-unsigned int zbuffer_len = 0;
 
 /* structure for keeping track of our mng stream inside the callbacks */
 typedef struct {
@@ -93,21 +78,47 @@ typedef struct _mng_file_info
 	struct _mng_file_info* next;
 } mng_file_info;
 
-/* pointer to mng_file_info linked list */
-mng_file_info* Infos = NULL;
-
 /* private application data */
 const unsigned char format_png = 1; /* file is apng */
 const unsigned char format_mng = 2; /* file is mng  */
 const unsigned char format_jng = 3; /* file is jng  */
-// APNG/PNG 8-Byte header
+// (A)PNG 8-Byte header
 static const char png_signature[8] = {(char)0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A};
 // MNG 8-Byte header
 static const char mng_signature[8] = {(char)0x8A, 0x4D, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A};
 // MNG 8-Byte header
 static const char jng_signature[8] = {(char)0x8B, 0x4A, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A};
 
+string basename(string filename);
+string removeExtension(string filename);
+
+bool init_libs();
+int identify_file(FILE *fsource);
+int apng2mng(string source, string dest);
+int mng2apng(string source, string dest);
+
 #endif
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -1,5 +1,5 @@
 EXEC          = apng2mng
-SRC_FILES     = apng2mng.cpp
+SRC_FILES     = apng2mng.cpp main.cpp
 
 CXX = g++
 CC = $(CXX)
