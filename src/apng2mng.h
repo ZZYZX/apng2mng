@@ -39,7 +39,7 @@
 
 using namespace std;
 
-/* structure for keeping track of our mng stream inside the callbacks */
+/* Structure for keeping track of our mng stream inside the callbacks */
 typedef struct {
   FILE       *file;     /* pointer to the file we're decoding */
   const char *mode;     /* string for fopen mode param */
@@ -47,35 +47,35 @@ typedef struct {
   mng_uint32  delay;    /* ticks to wait before resuming decode */
 } mngstuff;
 
-/* datatype for color */
+/* Datatype for color */
 typedef union
 {
-	struct
-	{
-		unsigned char r, g, b, a;
-	} bchan;
-	unsigned char channels[4];
-	unsigned int value;
+    struct
+    {
+        unsigned char r, g, b, a;
+    } bchan;
+    unsigned char channels[4];
+    unsigned int value;
 } RGBA;
 
-/* structure for mng file info */
+/* Structure for MNG file info */
 typedef struct _mng_file_info
 {
-	FILE* f;
-	char* fname;
-	char* fmode;
-	int w, h;
-	int x, y;
-	RGBA* image;
-	unsigned char* indimg;
-	int delay;
-	int identical;
-	unsigned short objid;
-	unsigned short cloneid;
-	int clone;
-	unsigned short precloneid;
-	int preclone;
-	struct _mng_file_info* next;
+    FILE* f;
+    char* fname;
+    char* fmode;
+    int w, h;
+    int x, y;
+    RGBA* image;
+    unsigned char* indimg;
+    int delay;
+    int identical;
+    unsigned short objid;
+    unsigned short cloneid;
+    int clone;
+    unsigned short precloneid;
+    int preclone;
+    struct _mng_file_info* next;
 } mng_file_info;
 
 /* private application data */
@@ -220,5 +220,3 @@ int mng2apng(string source, string dest);
   }
   cout << "Test 5 - finish" << endl;
 */
-
-

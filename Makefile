@@ -1,4 +1,4 @@
-EXEC          = apng2mng
+PROG          = apng2mng
 SRC_FILES     = apng2mng.cpp main.cpp
 
 CXX = g++
@@ -12,20 +12,21 @@ CCFLAGS       = $(CXXFLAGS)
 COURSE_DIR    = /usr/include:/usr/local/include
 LIBDIR        = /usr/lib:/usr/local/lib
 
-CPPFLAGS      = -I. \
-                  -I$(COURSE_DIR)
-LDFLAGS       = -L. \
-                  -L$(COURSE_DIR)
+CPPFLAGS      = -I./src/ \
+                -I$(COURSE_DIR)
+LDFLAGS       = -L./src/ \
+                -L$(COURSE_DIR)
 
 LDLIBS        = -lapngasm -lmng
 
-O_FILES       = $(SRC_FILES:%.cpp=%.o)
+O_FILES       = ./src/$(SRC_FILES:%.cpp=%.o)
 
 
-all: $(EXEC)
+all: $(PROG)
+.PHONY: all
 
-$(EXEC): $(O_FILES)
+$(PROG): $(O_FILES)
 
 clean:
-	$(RM) $(O_FILES) $(EXEC)
-
+	$(RM) $(O_FILES) $(PROG)
+.PHONY: clean
