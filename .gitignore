@@ -1,9 +1,5 @@
 .directory
 apng2mng
 *.[aod]
-*.png
-*.mng
-*.apng
 *~
 *.xml
-
